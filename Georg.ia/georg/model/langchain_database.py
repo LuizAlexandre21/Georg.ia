@@ -40,7 +40,7 @@ class LLMdatabase:
     @property 
     def model(self)->str:
         """Retorna o modelo para ser utilizado"""
-        return self.model 
+        return self._model 
     
 
     @tables.setter
@@ -55,7 +55,7 @@ class LLMdatabase:
         """ Connection into database with langchain toolkit """
         try:
             return SQLDatabase.from_uri(
-                self._db_url, 
+                self._db_uri, 
                 include_tables=self._tables, 
                 schema=self._schema)
         except Exception as e:
@@ -65,8 +65,8 @@ class LLMdatabase:
 
         """Configura o agente com memória conversacional."""
         llm = Ollama(
-            model = self.model(),
-            base_url = self.base_url(),
+            model = self._model,
+            base_url = self._model_url,
             temperature = 0.2
         )
         db = self.database_conn()
