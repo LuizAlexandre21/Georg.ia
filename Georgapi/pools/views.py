@@ -7,24 +7,29 @@ from rest_framework import status
 from src.georg.graph.graph import TextProcessingGraph 
 from src.georg.model.langchain_database import LLMdatabase 
 from .models import *
-from .serializers import UsageLogSerializer, LLMConfigSerializer, LLMRequestSerializer,LLMSessionSerializer
+from .serializers import *
+from drf_yasg.utils import swagger_auto_schema
 
 # Create your views here.
+
 class LLMRequestViewSet(viewsets.ModelViewSet):
     queryset = LLM_Request.objects.all()
-    serializer_class = LLMRequestSerializer
 
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return LLMRequestSerializerget  # Para GET, retorna todos os campos
+        return LLMRequestSerializerpost  # Para POST e UPDATE, retorna apenas os necessários
 
-    def create(self,request,*args,**kwargs):
-        serializer =self.get_serializer(data=request.data)
+    @swagger_auto_schema(operation_description="Criar uma nova requisição LLM")
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-    
             llm_model = LLMdatabase()
             graph = TextProcessingGraph(llm_model)
 
-            result = graph,run(llm_request.input_text)
+            result = graph.run(serializer.validated_data['pergunta'])
 
-            llm_request = serializer.save(resposta = result.get("llm_response"))
+            llm_request = serializer.save(resposta=result.get("llm_response"))
 
             return Response(
                 {"request_id": llm_request.id, "llm_response": result.get("llm_response")},
@@ -32,40 +37,29 @@ class LLMRequestViewSet(viewsets.ModelViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-    def retrieve(self, request, *args, **kwargs):
-
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-    
+    @swagger_auto_schema(operation_description="Atualizar uma requisição específica")
     def update(self, request, *args, **kwargs):
-        
         instance = self.get_object()
-        serializer = self.get_serializer(instance,data=request.data)
+        serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid():
-            # Se válido, atualiza a instância com os novos dados
             llm_model = LLMdatabase()
             graph = TextProcessingGraph(llm_model)
-            result = graph.run(serializer.validated_data['input_text'])
-            
-            # Atualiza a resposta do modelo com a nova informação
+            result = graph.run(serializer.validated_data['pergunta'])
+
             llm_request = serializer.save(resposta=result.get("llm_response"))
 
             return Response(
                 {"request_id": llm_request.id, "llm_response": result.get("llm_response")},
                 status=status.HTTP_200_OK
             )
-        
-        # Caso os dados não sejam válidos, retorna os erros de validação
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class LLMConfigViewSet(viewsets.ModelViewSet):
     queryset = LLM_Config.objects.all()
     serializer_class = LLMConfigSerializer
 
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
     def create(self,request,*args,**kwargs):
         serializer =self.get_serializer(data=request.data)
        
@@ -76,7 +70,7 @@ class LLMConfigViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
     def retrieve(self, request, *args, **kwargs):
         
         instance = self.get_object()
@@ -90,6 +84,7 @@ class LLMSessionViewSet(viewsets.ModelViewSet):
     queryset = LLM_Session.objects.all()
     serializer_class = LLMSessionSerializer
 
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
     def create(self, request, *args, **kwargs):
         """
         Método POST para criar uma nova sessão LLM.
@@ -111,6 +106,7 @@ class LLMSessionViewSet(viewsets.ModelViewSet):
         # Se os dados não forem válidos, retorna os erros de validação
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
     def retrieve(self, request, *args, **kwargs):
         """
         Método GET para recuperar uma sessão LLM específica.
@@ -125,10 +121,11 @@ class LLMSessionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class LLMRequestViewSet(viewsets.ModelViewSet):
-    queryset = UsageLogSerializer.objects.all()
+class LLMLogViewSet(viewsets.ModelViewSet):
+    queryset = LLM_Interaction_Log.objects.all()
     serializer_class = UsageLogSerializer
 
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
     def create(self, request, *args, **kwargs):
         """
         Método POST para criar uma nova requisição LLM.
@@ -150,6 +147,7 @@ class LLMRequestViewSet(viewsets.ModelViewSet):
         # Se os dados não forem válidos, retorna os erros de validação
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
     def retrieve(self, request, *args, **kwargs):
         """
         Método GET para recuperar uma requisição LLM específica.
