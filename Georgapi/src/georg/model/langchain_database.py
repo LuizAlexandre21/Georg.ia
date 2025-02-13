@@ -8,6 +8,7 @@ from src.georg.utils.LLMClass import LLMparams
 from langchain.memory import ConversationBufferMemory
 
 # Criando a classe do modelo de linguagem natural 
+@classmethod
 class LLMdatabase:
     
     """ Classe para instanciar o modelo neural de linguagem para interpretação de dados d"""
