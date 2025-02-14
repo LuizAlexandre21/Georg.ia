@@ -1,19 +1,31 @@
-from django.shortcuts import render
-from django.http import JsonResponse 
 from rest_framework import viewsets
-import json
 from rest_framework.response import Response
 from rest_framework import status 
 from src.georg.graph.graph import TextProcessingGraph 
 from src.georg.model.langchain_database import LLMdatabase 
+from src.georg.utils.LLMClass import LLMparams
 from .models import *
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Create your views here.
-
 class LLMRequestViewSet(viewsets.ModelViewSet):
+    
     queryset = LLM_Request.objects.all()
+
+    def __init__(self, **kwargs):  # Aceitar quaisquer parâmetros extras
+        super().__init__(**kwargs)  # Passa os parâmetros para o construtor da classe pai
+        self.params = LLMparams({
+            'db_uri': os.getenv('DB_URI'),
+            'tables': os.getenv('TABLE').split(','),
+            'schema': os.getenv('SCHEMA'),
+            'model': os.getenv('MODEL_NAME'),
+            'model_url': os.getenv('MODEL_URL')
+        })
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
@@ -24,7 +36,7 @@ class LLMRequestViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            llm_model = LLMdatabase()
+            llm_model = LLMdatabase(self.params)
             graph = TextProcessingGraph(llm_model)
 
             result = graph.run(serializer.validated_data['pergunta'])
@@ -42,7 +54,7 @@ class LLMRequestViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid():
-            llm_model = LLMdatabase()
+            llm_model = LLMdatabase(self.params)
             graph = TextProcessingGraph(llm_model)
             result = graph.run(serializer.validated_data['pergunta'])
 
@@ -53,6 +65,7 @@ class LLMRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class LLMConfigViewSet(viewsets.ModelViewSet):

@@ -8,7 +8,6 @@ from src.georg.utils.LLMClass import LLMparams
 from langchain.memory import ConversationBufferMemory
 
 # Criando a classe do modelo de linguagem natural 
-@classmethod
 class LLMdatabase:
     
     """ Classe para instanciar o modelo neural de linguagem para interpretação de dados d"""
@@ -63,15 +62,23 @@ class LLMdatabase:
             raise ConnectionError(f"Falha ao conectar ao banco de dados:{e}")
     
     def llm_agent(self):
-
         """Configura o agente com memória conversacional."""
         llm = Ollama(
-            model = self._model,
-            base_url = self._model_url,
-            temperature = 0.2
+            model=self._model,
+            base_url=self._model_url,
+            temperature=0.2
         )
-        db = self.database_conn()
+        db = self.database_conn()  # Supondo que esse método conecta ao seu banco de dados
         toolkit = SQLDatabaseToolkit(db=db, llm=llm)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        agent = create_sql_agent(llm=llm, toolkit=toolkit, verbose=True, memory=memory)
+        
+        # Cria o agente com o tratamento de erro de parsing ativado
+        agent = create_sql_agent(
+            llm=llm, 
+            toolkit=toolkit, 
+            verbose=True, 
+            memory=memory, 
+            handle_parsing_errors=True
+        )
+        
         return agent, memory
