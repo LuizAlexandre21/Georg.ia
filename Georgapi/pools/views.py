@@ -173,3 +173,40 @@ class LLMLogViewSet(viewsets.ModelViewSet):
         
         # Retorna a resposta com os dados da requisição
         return Response(serializer.data)
+
+
+class LLMUserinfo(viewsets.ModelViewSet):
+    queryset = User_Info.objects.all()
+    serializer_class = LLMuserinfo
+    
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
+    def create(self,request,*args,**kwargs):
+        """
+        Método POST para criar uma nova requisição LLM.
+        """
+        # Criação do serializer com os dados enviados na requisição
+        serializer = self.get_serializer(data=request.data)
+        
+        # Verifica se os dados são válidos
+        if serializer.is_valid():
+            # Salva a nova requisição LLM no banco de dados
+            llm_request = serializer.save()
+            
+            # Retorna a resposta com a requisição criada
+            return Response(
+                {"request_id": llm_request.id, "user_id": llm_request.user_id},
+                status=status.HTTP_201_CREATED
+            )
+    @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Método GET para recuperar uma requisição LLM específica.
+        """
+        # Recupera a instância de LLM_Request com base no ID da URL
+        instance = self.get_object()
+        
+        # Serializa a instância para o formato JSON
+        serializer = self.get_serializer(instance)
+        
+        # Retorna a resposta com os dados da requisição
+        return Response(serializer.data)

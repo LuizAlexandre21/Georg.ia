@@ -1,6 +1,6 @@
 from django.urls import path,include 
 from rest_framework.routers import DefaultRouter
-from .views import LLMRequestViewSet,LLMConfigViewSet,LLMSessionViewSet,LLMLogViewSet
+from .views import LLMRequestViewSet,LLMConfigViewSet,LLMSessionViewSet,LLMLogViewSet,LLMUserinfo
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
@@ -23,6 +23,7 @@ router.register(r'requests', LLMRequestViewSet, basename='llmrequest')
 router.register(r'configs', LLMConfigViewSet, basename='llmconfig')
 router.register(r'chatsessions', LLMSessionViewSet, basename='chatsession')
 router.register(r'usagelogs', LLMLogViewSet, basename='usagelog')
+router.register(r'user_info',LLMUserinfo,basename='user_info'),
 
 urlpatterns = [
     path('', include(router.urls)),  # Roteamento para os endpoints

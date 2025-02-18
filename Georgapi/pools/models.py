@@ -7,6 +7,7 @@ class LLM_Config(models.Model):
     model_url = models.CharField(max_length=255)  # Adicionado o max_length
     temperature = models.FloatField(default=0.7)
     max_tokens = models.IntegerField(default=512)
+    prompt = models.TextField(default='',null=True)
     session_id = models.ForeignKey('LLM_Session', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
@@ -14,8 +15,8 @@ class LLM_Config(models.Model):
 
 # Classe de interação do modelo
 class LLM_Request(models.Model):
-    session_id = models.ForeignKey('LLM_Session', on_delete=models.CASCADE)  # Relacionado com a sessão
-    user_id = models.ForeignKey('User_Info', on_delete=models.CASCADE)  # Relacionado com o usuário
+    session = models.ForeignKey('LLM_Session', on_delete=models.CASCADE)  # Relacionado com a sessão
+    user = models.ForeignKey('User_Info', on_delete=models.CASCADE)  # Relacionado com o usuário
     pergunta = models.TextField()
     resposta = models.TextField()
     create_date = models.DateTimeField(default=timezone.now)  # Definindo a data de criação
@@ -26,8 +27,8 @@ class LLM_Request(models.Model):
 
 # Classe para gerenciar sessões do modelo
 class LLM_Session(models.Model):
-    session_id = models.CharField(max_length=255, unique=True)
-    user_id = models.ForeignKey('User_Info', on_delete=models.CASCADE)  # Relacionado com o usuário
+    session = models.CharField(max_length=255, unique=True)
+    user = models.ForeignKey('User_Info', on_delete=models.CASCADE)  # Relacionado com o usuário
     model_config = models.ForeignKey(LLM_Config, on_delete=models.SET_NULL, null=True, blank=True)  # Configuração do modelo utilizado
     started_at = models.DateTimeField(default=timezone.now)  # Definindo a data de início
     name_model = models.CharField(max_length=255,null=True, blank=True)
@@ -39,19 +40,21 @@ class LLM_Session(models.Model):
 
 # Log de interações com o modelo
 class LLM_Interaction_Log(models.Model):
-    session_id = models.ForeignKey(LLM_Session, on_delete=models.CASCADE)  # Sessão associada
-    user_id = models.ForeignKey('User_Info', on_delete=models.CASCADE)  # Relacionado com o usuário
-    request = models.TextField()  # A pergunta enviada pelo usuário
-    response = models.TextField()  # A resposta gerada pelo modelo
-    timestamp = models.DateTimeField(default=timezone.now)  # Definindo a data e hora de criação
-    request_type = models.CharField(max_length=50, choices=[('text', 'Text'), ('voice', 'Voice')], default='text')  # Tipo de requisição (ex: texto ou voz)
+    session = models.ForeignKey(LLM_Session, on_delete=models.CASCADE)
+    user = models.ForeignKey('User_Info', on_delete=models.CASCADE, null=True)  # Permite null
+    request = models.TextField()
+    response = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now)
+    request_type = models.CharField(max_length=50, choices=[('text', 'Text'), ('voice', 'Voice')], default='text')
 
     def __str__(self):
-        return f"Log {self.id} - Session {self.session.session_id} - {self.timestamp}"
+        return f"Log {self.id} - Session {self.session.session} - {self.timestamp}"
+
+
 
 # Classe para armazenar informações do usuário
 class User_Info(models.Model):
-    user_id = models.AutoField(primary_key=True)  # Chave primária automática
+    user = models.AutoField(primary_key=True)  # Chave primária automática
     username = models.CharField(max_length=255, unique=True)  # Nome de usuário único
     email = models.EmailField(unique=True)  # E-mail único
     first_name = models.CharField(max_length=255, blank=True, null=True)  # Nome (opcional)
