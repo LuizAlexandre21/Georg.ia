@@ -16,9 +16,12 @@ jobs:
       - name: Set up SSH Key
         run: |
           mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 32 172.22.130.107 >> ~/.ssh/known_hosts
+      
 
       - name: Deploy via SSH
         run: |
