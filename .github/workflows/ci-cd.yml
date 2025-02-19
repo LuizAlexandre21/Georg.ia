@@ -1,0 +1,30 @@
+name: CI/CD api pipeline 
+on:
+  push:
+    branches:
+      - main 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code 
+        uses: actions/setup-python@v2 
+      
+      - name: Set up Python 
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+        
+      - name: Install poetry 
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -  # Instala o Poetry
+          export PATH="$HOME/.local/bin:$PATH"  # Adiciona o Poetry ao PATH
+
+      - name: Install Poetry Dependences
+        run: poetry install 
+
+      - name: Deploy to WSL 
+        run:|
+           ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} user@wsl-host "cd /path/to/your/project && ./deploy_script.sh"
+  
