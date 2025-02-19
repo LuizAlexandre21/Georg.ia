@@ -20,15 +20,15 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 700 ~/.ssh
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p 32 172.22.130.107 >> ~/.ssh/known_hosts
-      
-
+          # Adiciona a chave do host remoto ao arquivo known_hosts para evitar prompt de confirmação
+          ssh-keyscan -H 172.22.130.107 >> ~/.ssh/known_hosts
+          
       - name: Deploy via SSH
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa main@172.22.130.107 -p 32 <<'EOF'
             
             # Acessa o diretório do projeto
-            cd project 
+            cd /path/to/project || exit 1
 
             # Para e remove o container antigo (se existir)
             docker stop georg_ia || true
@@ -38,9 +38,9 @@ jobs:
             docker rmi georg_ia:latest || true
 
             # Constrói a nova imagem
-            docker build -t georg_ia:latest .
+            docker build -t georg_ia:latest . || exit 1
 
             # Roda o novo container
-            docker run -d --name georg_ia -p 80:80 georg_ia:latest
+            docker run -d --name georg_ia -p 80:80 georg_ia:latest || exit 1
 
           EOF
