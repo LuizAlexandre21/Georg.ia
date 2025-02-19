@@ -20,27 +20,35 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 700 ~/.ssh
           chmod 600 ~/.ssh/id_rsa
-          # Adiciona a chave do host remoto ao arquivo known_hosts para evitar prompt de confirmação
+          # Adiciona a chave do host remoto ao arquivo known_hosts
           ssh-keyscan -H 172.22.130.107 >> ~/.ssh/known_hosts
-          
+          echo "SSH key setup completed."
+
       - name: Deploy via SSH
         run: |
+          echo "Starting SSH deployment..."
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa main@172.22.130.107 -p 32 <<'EOF'
             
+            echo "Entering project directory..."
             # Acessa o diretório do projeto
-            cd /path/to/project || exit 1
+            cd /path/to/project || { echo "Failed to cd into project directory"; exit 1; }
 
+            echo "Stopping and removing old container..."
             # Para e remove o container antigo (se existir)
             docker stop georg_ia || true
             docker rm georg_ia || true
 
+            echo "Removing old image..."
             # Remove imagem antiga
             docker rmi georg_ia:latest || true
 
+            echo "Building the new image..."
             # Constrói a nova imagem
-            docker build -t georg_ia:latest . || exit 1
+            docker build -t georg_ia:latest . || { echo "Docker build failed"; exit 1; }
 
+            echo "Running the new container..."
             # Roda o novo container
-            docker run -d --name georg_ia -p 80:80 georg_ia:latest || exit 1
+            docker run -d --name georg_ia -p 80:80 georg_ia:latest || { echo "Docker run failed"; exit 1; }
 
+            echo "Deployment completed successfully."
           EOF
