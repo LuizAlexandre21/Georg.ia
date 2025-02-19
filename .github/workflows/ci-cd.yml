@@ -1,30 +1,43 @@
-name: CI/CD api pipeline 
+name: CI/CD Local Docker Pipeline
+
 on:
   push:
     branches:
       - main 
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest 
 
     steps:
       - name: Check out code 
-        uses: actions/setup-python@v2 
-      
-      - name: Set up Python 
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12'
-        
-      - name: Install poetry 
+        uses: actions/checkout@v3 
+
+      - name: Set up SSH Key
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -  # Instala o Poetry
-          export PATH="$HOME/.local/bin:$PATH"  # Adiciona o Poetry ao PATH
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p 32 172.22.130.107 >> ~/.ssh/known_hosts
 
-      - name: Install Poetry Dependences
-        run: poetry install 
+      - name: Deploy via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa main@172.22.130.107 -p 32 <<'EOF'
+            
+            # Acessa o diretório do projeto
+            cd project 
 
-      - name: Deploy to WSL 
-        run:|
-           ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} user@wsl-host "cd /path/to/your/project && ./deploy_script.sh"
-  
+            # Para e remove o container antigo (se existir)
+            docker stop georg_ia || true
+            docker rm georg_ia || true
+
+            # Remove imagem antiga
+            docker rmi georg_ia:latest || true
+
+            # Constrói a nova imagem
+            docker build -t georg_ia:latest .
+
+            # Roda o novo container
+            docker run -d --name georg_ia -p 80:80 georg_ia:latest
+
+          EOF
