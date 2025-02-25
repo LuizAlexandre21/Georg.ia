@@ -38,8 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'pools.apps.PoolsConfig',
+    'pools.accounts.apps.AccountsConfig',
     'rest_framework',
-    'drf_yasg'
+    'drf_yasg',
+    'rest_framework.authtoken',
+
 ]
 
 MIDDLEWARE = [
