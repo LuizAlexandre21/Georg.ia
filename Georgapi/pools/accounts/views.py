@@ -109,3 +109,17 @@ class LogoutView(APIView):
         return Response({"message": "Logout realizado com sucesso"}, status=status.HTTP_200_OK)
     
 
+class DeleteUserView(APIView):
+    """
+    API para deletar a conta do usuário autenticado.
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Deleta o usuário autenticado.
+        """
+        user = request.user
+        user.delete()
+        return Response({"message": "Usuário deletado com sucesso"}, status=status.HTTP_200_OK)
