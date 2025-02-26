@@ -22,8 +22,8 @@ class UserManager(BaseUserManager):
 
 class User_Info(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    username = models.CharField(max_length=255, blank=True, null=True) 
-    email = models.EmailField(unique=True)  # E-mail único
+    username = models.CharField(unique=True,max_length=255, blank=True, null=True) 
+    email = models.EmailField(unique=False)  # E-mail único
     first_name = models.CharField(max_length=255, blank=True, null=True)  # Nome (opcional)
     last_name = models.CharField(max_length=255, blank=True, null=True)  # Sobrenome (opcional)
     phone_number = models.CharField(max_length=15, blank=True, null=True)  # Número de telefone (opcional)
@@ -39,7 +39,7 @@ class User_Info(models.Model):
     is_superuser = models.BooleanField(default=False)  # Indica se o usuário é superusuário
     
     USERNAME_FIELD = 'username'  # Campo para autenticação
-    REQUIRED_FIELDS = ['email']  # Campos obrigatórios para criação do usuário
+    REQUIRED_FIELDS = ['username']  # Campos obrigatórios para criação do usuário
     
     objects = UserManager()  # Definindo o gerenciador de usuários customizado
 

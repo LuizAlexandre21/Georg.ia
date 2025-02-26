@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate
 from .models import User_Info
 from .serializers import UserSerializer
 from django.contrib.auth.models import User  # Importando o modelo User
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 # 📌 1. ViewSet para CRUD de Usuários
 class UserViewSet(viewsets.ModelViewSet):
@@ -73,14 +75,17 @@ class LoginView(APIView):
     """
     permission_classes = [permissions.AllowAny]
 
-    def post(self, request,*args,**kwargs):
+    def post(self, request, *args, **kwargs):
         """
-        Recebe email e senha, autentica o usuário e retorna um token.
+        Recebe username e senha, autentica o usuário e retorna um token.
         """
-        email = request.data.get("email")
+        username = request.data.get("username")
         password = request.data.get("password")
 
-        user = authenticate(email=email, password=password)
+        if not username or not password:
+            return Response({"error": "Username e senha são obrigatórios"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(username=username, password=password)
 
         if user is not None:
             token, created = Token.objects.get_or_create(user=user)
@@ -89,16 +94,18 @@ class LoginView(APIView):
             return Response({"error": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-# 📌 4. View para Logout (Revogar Token)
 class LogoutView(APIView):
     """
     API para logout de um usuário autenticado (revoga o token).
     """
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]  # 🔥 Necessário para autenticar via token
+    permission_classes = [IsAuthenticated]
 
-    def post(self, request,*args,**kwargs):
+    def post(self, request, *args, **kwargs):
         """
         Apaga o token do usuário.
         """
         request.user.auth_token.delete()
         return Response({"message": "Logout realizado com sucesso"}, status=status.HTTP_200_OK)
+    
+
