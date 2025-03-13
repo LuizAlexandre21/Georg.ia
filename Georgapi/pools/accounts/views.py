@@ -52,7 +52,7 @@ class RegisterUserView(CreateAPIView):
         # Criando o usuário corretamente usando o User do Django
         user = User.objects.create_user(
             username=validated_data["username"],
-            email=validated_data.get("email", ""),
+            email=validated_data.get("email"),
             password=validated_data["password"],
         )
 

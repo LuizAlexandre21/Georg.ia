@@ -10,7 +10,6 @@ class LLM_Config(models.Model):
     temperature = models.FloatField(default=0.7)
     max_tokens = models.IntegerField(default=512)
     prompt = models.TextField(default='', null=True, blank=True)
-    session = models.ForeignKey('LLM_Session', on_delete=models.SET_NULL, null=True, blank=True, related_name="configurations")
 
     def __str__(self):
         return self.model_name
@@ -18,7 +17,7 @@ class LLM_Config(models.Model):
 
 # Classe para gerenciar sessões do modelo
 class LLM_Session(models.Model):
-    session = models.CharField(max_length=255, unique=True)
+    session = models.AutoField(primary_key=True)
     user = models.ForeignKey(User_Info, on_delete=models.CASCADE, related_name="sessions")  # Relacionado com o usuário
     model_config = models.ForeignKey(LLM_Config, on_delete=models.SET_NULL, null=True, blank=True, related_name="sessions")  # Configuração do modelo
     started_at = models.DateTimeField(default=timezone.now)  # Definindo a data de início

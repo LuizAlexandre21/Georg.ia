@@ -1,8 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status 
+from rest_framework.permissions import IsAuthenticated
 from src.georg.graph.graph import TextProcessingGraph 
 from src.georg.model.langchain_database import LLMdatabase 
+
 from src.georg.utils.LLMClass import LLMparams
 from .models import *
 from .serializers import *
@@ -14,7 +16,7 @@ load_dotenv()
 
 # Create your views here.
 class LLMRequestViewSet(viewsets.ModelViewSet):
-    
+    permission_classes = [IsAuthenticated]  
     queryset = LLM_Request.objects.all()
 
     def __init__(self, **kwargs):  # Aceitar quaisquer parâmetros extras
@@ -69,6 +71,7 @@ class LLMRequestViewSet(viewsets.ModelViewSet):
 
 
 class LLMConfigViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = LLM_Config.objects.all()
     serializer_class = LLMConfigSerializer
 
@@ -94,6 +97,7 @@ class LLMConfigViewSet(viewsets.ModelViewSet):
     
 
 class LLMSessionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = LLM_Session.objects.all()
     serializer_class = LLMSessionSerializer
 
@@ -112,7 +116,7 @@ class LLMSessionViewSet(viewsets.ModelViewSet):
             
             # Retorna a resposta com a sessão criada
             return Response(
-                {"session_id": llm_session.session_id, "user_id": llm_session.user_id},
+                {"session_id": llm_session.session, "user_id": llm_session.user_id},
                 status=status.HTTP_201_CREATED
             )
         
@@ -136,6 +140,7 @@ class LLMSessionViewSet(viewsets.ModelViewSet):
 
 class LLMLogViewSet(viewsets.ModelViewSet):
     queryset = LLM_Interaction_Log.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = UsageLogSerializer
 
     @swagger_auto_schema(operation_description="Atualiza uma requisição específica")
@@ -176,6 +181,7 @@ class LLMLogViewSet(viewsets.ModelViewSet):
 
 
 class LLMUserinfo(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = User_Info.objects.all()
     serializer_class = LLMuserinfo
     

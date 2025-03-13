@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar Moderna</title>
+    <link rel="stylesheet" href="chat_georgia.css">
+</head>
+<body>
+    <!-- Botão de alternância para a sidebar -->
+    <button class="toggle-btn" aria-label="Toggle Sidebar">&#9776;</button>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">MinhaLogo</div>
+    </nav>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <a href="#" class="sidebar-link">Dashboard</a>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="content" id="content">
+            <section class="chat-container">
+                <!-- Cards dentro do chat -->
+                <div class="panel-container" id="panel-container">
+                    <article class="panel">
+                        <img src="https://img.icons8.com/?size=100&id=HYZX5vuA7nXY&format=png&color=000000" alt="Ícone 1">
+                        <p>Resuma a saúde fiscal do município com base nos dados mais recentes.</p>
+                    </article>
+                    <article class="panel">
+                        <img src="https://img.icons8.com/?size=100&id=6506&format=png&color=000000" alt="Ícone 2">
+                        <p>Liste as emendas parlamentares aprovadas e seu status de execução.</p>
+                    </article>
+                    <article class="panel">
+                        <img src="https://img.icons8.com/?size=100&id=11702&format=png&color=000000" alt="Ícone 3">
+                        <p>Crie um cenário de previsão para o orçamento municipal do próximo ano.</p>
+                    </article>
+                </div>
+
+                <!-- Área do chat -->
+                <div class="chat-box" id="chat-box"></div>
+
+                <!-- Input de mensagem -->
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+                    <button type="button" aria-label="Send Message">Enviar</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="src/main.js"></script>
+</body>
+</html>
