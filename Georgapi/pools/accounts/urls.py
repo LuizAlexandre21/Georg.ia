@@ -1,16 +1,21 @@
 from django.urls import path,include 
 from rest_framework.routers import DefaultRouter
-from .views import LoginView,LogoutView, RegisterUserView,UserViewSet,DeleteUserView
+from .views import EmpresaView, UsuarioView, LoginViewSet, LogoutViewSet
 from rest_framework import permissions
-
-router = DefaultRouter()
-router.register(r'users', UserViewSet)  # Apenas o ViewSet aqui
 
 
 urlpatterns = [
-    path('', include(router.urls)),           # Rotas do UserViewSet
-    path('login/', LoginView.as_view(), name='login'),
-    path('register/', RegisterUserView.as_view(), name='register'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('delete_user',DeleteUserView.as_view(),name = "delete")
+    # URL para a empresa
+    path('empresas/', EmpresaView.as_view(), name='empresa-list'),
+    path('empresas/<int:pk>/', EmpresaView.as_view(), name='empresa-detail'),
+    
+    # URL para os usuários (registro e operações)
+    path('usuarios/', UsuarioView.as_view(), name='usuario-list'),  # Registro de usuário via POST
+    path('usuarios/<int:pk>/', UsuarioView.as_view(), name='usuario-detail'),
+    
+    # URL para login
+    path('login/', LoginViewSet.as_view(), name='login'),
+    
+    # URL para logout
+    path('logout/', LogoutViewSet.as_view(), name='logout'),
 ]

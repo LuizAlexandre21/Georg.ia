@@ -1,38 +1,43 @@
 from rest_framework import serializers
-from .models import User_Info
+from .models import Empresas,Usuarios
+from django.contrib.auth import authenticate
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.authtoken.models import Token
 
-class UserSerializer(serializers.ModelSerializer):
-    # Campo password configurado como write_only para evitar que seja retornado na resposta
-    password = serializers.CharField(write_only=True)
-
+class EmpresaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User_Info 
-        fields = [
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'phone_number',
-            'address',
-            'date_of_birth',
-            'created_at',
-            'updated_at',
-            'is_active',
-            'is_staff',
-            'password'
-        ]
-        read_only_fields = ['created_at', 'updated_at', 'is_active', 'is_staff']
+        model = Empresas
+        fields =['nome','tipo','plano','telefone','imagem']
 
-    def create(self, validated_data):
-        # Cria o usuário utilizando o método create_user, que deve criptografar a senha
-        user = User_Info.objects.create_user(
-            username = validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-            phone_number=validated_data.get('phone_number', ''),
-            address=validated_data.get('address', ''),
-            date_of_birth=validated_data.get('date_of_birth', None),
-        )
-        return user
+
+class UsuarioSerializer(serializers.ModelSerializer):
+    empresa_id = serializers.PrimaryKeyRelatedField(queryset=Empresas.objects.all())  # Refere-se à empresa pelo ID
+    password = serializers.CharField(write_only=True)  # Não exibe a senha na resposta
+    class Meta:
+        model = Usuarios
+        fields = ['empresa_id','cpf','nome','cargo','email','telefone','tipo','imagem','password']
+        read_only_fields = ['empresa_id','primeiro_acesso','ultimo_acesso']
+
+    def create(self,validated_data):
+        password = validated_data.pop("password")
+        usuario=Usuarios(**validated_data)
+        usuario.set_password(password)
+        usuario.save()
+        return usuario
+    
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self,attrs):
+        username = attrs.get("username")
+        password = attrs.get("password")
+
+        user = authenticate(username=username,password=password)
+
+        if not user:
+            raise AuthenticationFailed('Invalid credentials')
+        
+        token,created = Token.objects.get_or_create(user=user)
+
+        return {"token":token.key}

@@ -10,7 +10,7 @@ class LLM_Config(models.Model):
     temperature = models.FloatField(default=0.7)
     max_tokens = models.IntegerField(default=512)
     prompt = models.TextField(default='', null=True, blank=True)
-
+    
     def __str__(self):
         return self.model_name
 
