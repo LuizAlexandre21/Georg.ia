@@ -1,36 +1,20 @@
 # Bibliotecas 
 from rest_framework import serializers
-from .models import LLM_Config,LLM_Request,LLM_Interaction_Log,LLM_Session,User_Info
+from .models import config_model, config_session, chat_model 
 
-class LLMRequestSerializerpost(serializers.ModelSerializer):
+class ConfigModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LLM_Request
-        fields = ['session','user','pergunta']
+        model = config_model 
+        fields = ['modelo,url_modelo,temperatura,num_tokens,prompt']
 
 
-class LLMRequestSerializerget(serializers.ModelSerializer):
+class ConfigSessionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LLM_Request
-        fields = '__all__'
-        
-class LLMConfigSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LLM_Config
-        fields = '__all__'
-
-        
-class UsageLogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LLM_Interaction_Log
-        fields = '__all__'
+        model = config_session
+        fields = ['session','nome','is_active']
 
 
-class LLMSessionSerializer(serializers.ModelSerializer):
+class ChatModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LLM_Session
-        fields = '__all__'
-
-class LLMuserinfo(serializers.ModelSerializer):
-    class Meta:
-        model = User_Info
-        fields = '__all__'
+        model = chat_model
+        fields =['session','question','answer']

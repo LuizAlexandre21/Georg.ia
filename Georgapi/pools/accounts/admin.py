@@ -1,76 +1,81 @@
-from rest_framework import viewsets,permissions,status 
-from rest_framework.response import Response 
-from rest_framework.authtoken.models import Token 
-from rest_framework.views import APIView 
-from rest_framework.generics import CreateAPIView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
-from .models import User_Info 
-from .serializers import UserSerializer
+from django.shortcuts import get_object_or_404
+from .models import Usuarios
+from .serializers import UsuarioSerializer, LoginSerializer
 
-# Crud de usuarios 
-class UserViewSet(viewsets.ModelViewSet):
-
-    queryset = User_Info.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self,serializer):
-
-        user = serializer.save()
-        user.set_password(user.password)
-        user.save()
-
-# Registro de usuarios 
-class RegisterUserView(CreateAPIView):
-    queryset = User_Info.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]
-
-    # Adicionando a criptografia da senha
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data = request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        user.set_password(user.password)
-        user.save()
-
-        # Criando uk token 
-        token,created = token.object.get_or_create(user=user)
-
-        return Response({
-            "user":UserSerializer(user).data,
-            "token":token.key
-        },status=status.HTTP_201_CREATED)
-
-
-# Login e Geração de token
-class LoginView(APIView):
+# View para CRUD de usuários
+class UsuarioView(APIView):
+    permission_classes = [IsAuthenticated]
     
-    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        usuarios = Usuarios.objects.all()
+        serializer = UsuarioSerializer(usuarios, many=True)
+        return Response(serializer.data)
     
-    def post(self,request):
-        email = request.data.get("email")
-        password = request.data.get("password")
+    def post(self, request):
+        serializer = UsuarioSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.set_password(user.password)  # Criptografa a senha
+            user.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        user = authenticate(email=email,password=password)
+    def put(self, request, pk):
+        usuario = get_object_or_404(Usuarios, pk=pk)
+        serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk):
+        usuario = get_object_or_404(Usuarios, pk=pk)
+        usuario.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if user is not None:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({"token":token.key},status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
 
-
-# Logout 
-class LogoutView(APIView):
-    """
-    API para logout de um usuário autenticado (revoga o token).
-    """
-    permission_classes = [permissions.IsAuthenticated]
+# View para registro de usuário (sem necessidade de autenticação)
+class RegisterUserView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        """
-        Apaga o token do usuário.
-        """
-        request.user.auth_token.delete()
+        serializer = UsuarioSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.set_password(user.password)  # Criptografa a senha
+            user.save()
+            token, _ = Token.objects.get_or_create(user=user)  # Gera um token para o usuário
+            return Response({"user": serializer.data, "token": token.key}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# View para login de usuário
+class LoginViewSet(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            password = serializer.validated_data["password"]
+            user = authenticate(email=email, password=password)
+            if user:
+                token, _ = Token.objects.get_or_create(user=user)
+                return Response({"token": token.key}, status=status.HTTP_200_OK)
+            return Response({"error": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# View para logout de usuário autenticado
+class LogoutViewSet(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()  # Revoga o token
         return Response({"message": "Logout realizado com sucesso"}, status=status.HTTP_200_OK)

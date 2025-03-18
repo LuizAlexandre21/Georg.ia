@@ -1,6 +1,5 @@
 from langgraph.graph import StateGraph
 from src.georg.model.langchain_database import LLMdatabase
-from src.georg.graph.node import GraphState
 from typing import TypedDict, Optional
 
 

@@ -1,21 +1,19 @@
 from django.db import models
 
-class Plan_status(models.TextChoices):
-    SIMPLES = 'simples','Simples','SIMPLES'
-    AVANÇADO = 'avançado','Avançado','AVANÇADO'
-    COMPLETO = 'completo','Completo','COMPLETO'
+class PlanStatus(models.TextChoices):
+    SIMPLES = 'simples', 'Simples'
+    AVANCADO = 'avancado', 'Avançado'
+    COMPLETO = 'completo', 'Completo'
 
+class Tipo(models.TextChoices):
+    PREFEITURA = 'prefeitura', 'Prefeitura'
+    ESTADO = 'estado', 'Estado'
+    FEDERAL = 'federal', 'Federal'
+    ONG = 'ong', 'Ong'
+    OUTROS = 'outros', 'Outros'
 
-class Tipo (models.TextChoices):
-    PREFEITURAS = 'prefeituras','Prefeituras','PREFEITURAS'
-    ESTADO = 'estado','Estado','ESTADO'
-    FEDERAL = 'federal','Federal','FEDERAL'
-    ONG = 'ong','Ong','ONG'
-    Outros = 'outros','Outros','OUTROS'
-
-
-class Tipo_usuario(models.TextChoices):
-    VIEW = 'view','View','VIEW'
-    EDIT = 'edit','Edit','EDIT'
-    ADMIN = 'admin','Admin','ADMIN'
-    OWNER = 'owner','Owner','OWNER'
+class TipoUsuario(models.TextChoices):
+    VIEW = 'view', 'View'
+    EDIT = 'edit', 'Edit'
+    ADMIN = 'admin', 'Admin'
+    OWNER = 'owner', 'Owner'

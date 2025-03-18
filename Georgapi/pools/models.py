@@ -1,53 +1,46 @@
 from django.db import models
 from django.utils import timezone
-from pools.accounts.models import User_Info
+from pools.accounts.models import Empresas,Usuarios
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 
-# Classe de configurações do modelo
-class LLM_Config(models.Model):
-    model_name = models.CharField(max_length=255)
-    model_url = models.CharField(max_length=255)  # Adicionado o max_length
-    temperature = models.FloatField(default=0.7)
-    max_tokens = models.IntegerField(default=512)
-    prompt = models.TextField(default='', null=True, blank=True)
-    
-    def __str__(self):
-        return self.model_name
+# Modelo de Configuração do agente 
+class config_model(models.Model):
+    config = models.AutoField(primary_key=True)
+    empresa = models.ForeignKey(Empresas,on_delete=models.CASCADE)
+    modelo = models.CharField(max_length=255)
+    url_modelo = models.CharField(max_length=255)
+    temperatura = models.FloatField()
+    num_tokens = models.IntegerField()
+    prompt = models.TextField()
 
 
-# Classe para gerenciar sessões do modelo
-class LLM_Session(models.Model):
+# Modelo de Configuração de sessões 
+class config_session(models.Model):
     session = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User_Info, on_delete=models.CASCADE, related_name="sessions")  # Relacionado com o usuário
-    model_config = models.ForeignKey(LLM_Config, on_delete=models.SET_NULL, null=True, blank=True, related_name="sessions")  # Configuração do modelo
-    started_at = models.DateTimeField(default=timezone.now)  # Definindo a data de início
-    name_model = models.CharField(max_length=255, null=True, blank=True)
-    ended_at = models.DateTimeField(null=True, blank=True)  # Pode ser null se a sessão ainda estiver ativa
-    is_active = models.BooleanField(default=True)  # Status se a sessão está ativa ou não
+    user = models.ForeignKey(Usuarios,on_delete=models.CASCADE)
+    nome = models.CharField(max_length=255)
+    is_active = models.BooleanField()
+    id_config = models.ForeignKey(config_model,on_delete=models.CASCADE)
 
-    def __str__(self):
-        return f"Session {self.session} - User {self.user.username}"
 
-# Classe de interação do modelo
-class LLM_Request(models.Model):
-    session = models.ForeignKey(LLM_Session, on_delete=models.CASCADE, related_name="requests")  # Relacionado com a sessão
-    user = models.ForeignKey(User_Info, on_delete=models.CASCADE, related_name="requests")  # Relacionado com o usuário
-    pergunta = models.TextField()
-    resposta = models.TextField()
+# Modelo de Conversa 
+class chat_model(models.Model):
+    chat = models.AutoField(primary_key=True)
+    session = models.ForeignKey(config_session,on_delete=models.CASCADE)
+    question = models.TextField()
+    answer = models.TextField()
     create_date = models.DateTimeField(default=timezone.now)  # Definindo a data de criação
-    update_date = models.DateTimeField(auto_now=True)  # Atualização automática
 
-    def __str__(self):
-        return f"Request {self.id} - {self.create_date}"
 
-# Log de interações com o modelo
-class LLM_Interaction_Log(models.Model):
-    session = models.ForeignKey(LLM_Session, on_delete=models.CASCADE, related_name="logs")
-    user = models.ForeignKey(User_Info, on_delete=models.CASCADE, null=True, related_name="logs")  # Permite null
-    request = models.TextField()
-    response = models.TextField()
-    timestamp = models.DateTimeField(default=timezone.now)
-    request_type = models.CharField(max_length=50, choices=[('text', 'Text'), ('voice', 'Voice')], default='text')
-
-    def __str__(self):
-        return f"Log {self.id} - Session {self.session.session} - {self.timestamp}"
+@receiver(pre_save,sender=Usuarios)
+def trigger_modelconfig(sender,instance,**kwarg):
+    if not config_model.objects.filter(id=instance.categoria_id).exists():
+        config_model.objects.get_or_create(user=instance.user,defaults={
+            'nome':'llama3',
+            'url_modelo':'https://www.llama.com',
+            'temperatura':'0.1',
+            'tokens':'100',
+            'prompt':'',
+        })
