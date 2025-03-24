@@ -13,10 +13,10 @@ class LLMdatabase:
     """ Classe para instanciar o modelo neural de linguagem para interpretação de dados d"""
     def __init__(self,args:LLMparams):
         self._db_uri = args['db_uri']
-        self._tables = args['tables']
+        self._tables = args['tabelas']
         self._schema = args['schema']
-        self._model = args['model']
-        self._model_url = args['model_url']
+        self._model = args['modelo']
+        self._model_url = args['url_modelo']
 
 
     @property

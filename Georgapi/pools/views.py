@@ -7,6 +7,7 @@ from pools.serializers import ChatModelSerializer,ConfigSessionSerializer,Config
 from rest_framework.permissions import IsAuthenticated
 from src.georg.model.langchain_database import LLMdatabase 
 from src.georg.graph.graph import TextProcessingGraph 
+from django.forms.models import model_to_dict
 
 # Criando o View set para as configurações do modelo 
 class ConfigmodelView(APIView):
@@ -17,6 +18,13 @@ class ConfigmodelView(APIView):
         serializer = ConfigModelSerializer(config,many=True)
         return Response(serializer.data)
     
+    def post(self,request):
+        serializer = ConfigModelSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
     def put(self,request,pk):
         config = get_object_or_404(config_model,pk=pk)
         serializer = ConfigModelSerializer(config,data=request.data,partial=True)
@@ -35,7 +43,7 @@ class ConfigSessionView(APIView):
         return Response(serializer.data)
 
     def post(self,request): 
-        serializer = ConfigSessionSerializer(data=request)
+        serializer = ConfigSessionSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -65,17 +73,24 @@ class ChatModelView(APIView):
         return Response(serializer.data)
 
     def post(self,request):
-        config = config_model.objects.filter(empresa=request.user.empresa)
-        serializer = ChatModelSerializer(data=request)
-        if serializer.is_valid():
-            llm_model = LLMdatabase(config)
-            graph = TextProcessingGraph(llm_model)
-            result = graph.run(serializer.validated_data['pergunta'])
 
-            llm_request = serializer.save(resposta=result.get("llm_response"))
+        config_model = model_to_dict(config_model.objects.get(empresa=request.user.empresa))
+        config = {key:elem for key,elem in config_model.items() if key not in ['config','empresa']} 
+
+
+        graph = TextProcessingGraph(LLMdatabase(config))
+        result = graph.run(request.data['question'])
+
+        dados = request.data.copy() 
+        dados["answer"] = result['llm_response']
+
+        serializer = ChatModelSerializer(data=dados)
+        if serializer.is_valid():
+            
+            serializer.save()
 
             return Response(
-                {"request_id": llm_request.id, "llm_response": result.get("llm_response")},
+                {"llm_response": result['llm_response']},
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
