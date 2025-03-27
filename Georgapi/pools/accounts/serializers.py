@@ -31,26 +31,33 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    cpf = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
-    def validate(self,attrs):
-        username = attrs.get("username")
+    def validate(self, attrs):
+        cpf = attrs.get("cpf")
         password = attrs.get("password")
 
-        if not username or not password:
-            raise AuthenticationFailed("username and password are required")
+        if not cpf or not password:
+            raise AuthenticationFailed("CPF and password are required")
         
-        user = authenticate(username = username, password = password)
+        try:
+            user = Usuarios.objects.get(cpf=cpf)
+        except Usuarios.DoesNotExist:
+            raise AuthenticationFailed("User with this CPF does not exist")
+
+        # Autentica o usuário com cpf e senha
+        user = authenticate(cpf=cpf, password=password)
 
         if not user:
             raise AuthenticationFailed("Invalid credentials")
         
+        # Gerar tokens (usando o campo CPF, pois o modelo não possui o campo 'id')
         refresh = RefreshToken.for_user(user)
 
         return {
-            "user_id": user.id,
-            "username": user.username,
+            "user_id": user.cpf,  # Usando o CPF como identificador
+            "cpf": user.cpf,  # Aqui você mantém o CPF
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }

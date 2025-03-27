@@ -20,7 +20,7 @@ class Empresas(models.Model):
 class Usuarios(AbstractBaseUser, PermissionsMixin):
     user = models.AutoField(primary_key=True)
     empresa = models.ForeignKey(Empresas, on_delete=models.CASCADE)
-    cpf = models.CharField(max_length=11)
+    cpf = models.CharField(max_length=11,unique=True)
     nome = models.CharField(max_length=255)
     cargo = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
@@ -35,8 +35,8 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
 
     objects = UsuarioManager()
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name"]
+    USERNAME_FIELD = "cpf"
+    REQUIRED_FIELDS = ['nome', 'password']
 
     def __str__(self):
-        return self.email
+        return self.cpf

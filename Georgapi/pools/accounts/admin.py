@@ -8,6 +8,7 @@ from .serializers import UsuarioSerializer,LoginSerializer
 
 # View para Registro 
 class RegisterView(APIView):
+     permission_classes = [AllowAny]
      def post(self, request):
         # Ao criar um novo usuário, a senha precisa ser passada de forma segura
         serializer = UsuarioSerializer(data=request.data)
